@@ -1,0 +1,19 @@
+Problem: Two Sum
+Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+
+Input Format:
+n
+nums[0] nums[1] ... nums[n-1]
+target
+
+Output Format:
+Two indices i j (0-based, space separated)
+
+Example:
+Input:
+4
+2 7 11 15
+9
+
+Output:
+0 1
