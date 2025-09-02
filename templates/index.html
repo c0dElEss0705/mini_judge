@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ Code Grader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #8e44ad;
+            --success: #00b894;
+            --danger: #d63031;
+            --warning: #fdcb6e;
+            --info: #0984e3;
+            --light: #dfe6e9;
+            --dark: #2d3436;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+        }
+        
+        .test-case {
+            border-left: 4px solid var(--primary);
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .test-case:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-case.pass {
+            border-left-color: var(--success);
+        }
+        
+        .test-case.fail {
+            border-left-color: var(--danger);
+        }
+        
+        .submission-card {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .submission-card:hover {
+            background-color: rgba(108, 92, 231, 0.1);
+        }
+        
+        .memory-badge {
+            background: var(--info);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+        
+        #progressSection {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .batch-progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: var(--secondary);
+        }
+        
+        .stats-box {
+            text-align: center;
+            padding: 20px;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stats-label {
+            font-size: 1rem;
+            color: var(--dark);
+            font-weight: 600;
+        }
+        
+        #liveProgress {
+            transition: all 0.5s;
+        }
+        
+        .problem-statement {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .problem-statement h1, .problem-statement h2, .problem-statement h3 {
+            color: var(--primary);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .problem-statement pre {
+            background-color: #2d2d2d;
+            color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        .problem-statement code {
+            background-color: #f1f3f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        .file-input-label {
+            cursor: pointer;
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-code me-2"></i>C++ Code Grader
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-home me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-info-circle me-1"></i> About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-envelope me-1"></i> Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold mb-3">C++ Code Grading System</h1>
+                <p class="lead">Upload your C++ code to test against public and hidden test cases with real-time feedback</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <!-- Problem Statement Section -->
+                <div class="problem-statement mb-4">
+                    {{ problem_statement | safe }}
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Upload Submissions</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="nav nav-tabs" id="uploadTab" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="single-tab" data-bs-toggle="tab" data-bs-target="#single" type="button" role="tab">Single Submission</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="batch-tab" data-bs-toggle="tab" data-bs-target="#batch" type="button" role="tab">Batch Processing</button>
+                                    </li>
+                                </ul>
+                                
+                                <div class="tab-content p-3" id="uploadTabContent">
+                                    <div class="tab-pane fade show active" id="single" role="tabpanel">
+                                        <div class="upload-area" id="singleUploadArea">
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                            <h5>Drag & Drop Your C++ File</h5>
+                                            <p class="text-muted">or click to browse</p>
+                                            <label for="singleFileInput" class="file-input-label">
+                                                <i class="fas fa-file-code me-2"></i>Select File
+                                            </label>
+                                            <input type="file" id="singleFileInput" accept=".cpp,.cc,.cxx" style="display: none;">
+                                        </div>
+                                        <div class="mt-3">
+                                            <small class="text-muted">Maximum file size: 1MB. Supported extensions: .cpp, .cc, .cxx</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="tab-pane fade" id="batch" role="tabpanel">
+                                        <div class="upload-area" id="batchUploadArea">
+                                            <i class="fas fa-folder-plus fa-3x text-primary mb-3"></i>
+                                            <h5>Drag & Drop Multiple C++ Files</h5>
+                                            <p class="text-muted">or click to browse</p>
+                                            <label for="batchFileInput" class="file-input-label">
+                                                <i class="fas fa-folder me-2"></i>Select Files
+                                            </label>
+                                            <input type="file" id="batchFileInput" accept=".cpp,.cc,.cxx" multiple style="display: none;">
+                                        </div>
+                                        <div class="mt-3">
+                                            <small class="text-muted">Maximum 10 files. Each file max 1MB. Supported extensions: .cpp, .cc, .cxx</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div id="progressSection" class="mb-4" style="display: none;">
+                            <h5 class="mb-3"><i class="fas fa-tasks me-2"></i>Grading Progress</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span id="progressText">Processing...</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                            <div class="progress mb-4">
+                                <div id="liveProgress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            
+                            <div id="batchProgress" style="display: none;">
+                                <h6 class="mb-2">Batch Progress</h6>
+                                <div class="progress batch-progress mb-2">
+                                    <div id="batchProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small id="batchProgressText" class="text-muted">0/0 files processed</small>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Grading Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6>Resource Limits:</h6>
+                                <ul class="list-group list-group-flush mb-3">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Time Limit
+                                        <span class="badge bg-primary rounded-pill">5 seconds</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Memory Limit
+                                        <span class="badge bg-primary rounded-pill">256 MB</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        File Size Limit
+                                        <span class="badge bg-primary rounded-pill">1 MB</span>
+                                    </li>
+                                </ul>
+                                
+                                <h6>Supported Compilers:</h6>
+                                <p class="mb-1"><span class="badge bg-secondary">g++</span> with C++11 standard</p>
+                                
+                                <h6>Test Cases:</h6>
+                                <p class="mb-0">Your code will be tested against both public and hidden test cases. Public test results show expected vs actual output, while hidden test results only show pass/fail status.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="resultsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let currentSubmissionId = null;
+        let batchSubmissionIds = [];
+        let processedBatchItems = 0;
+        
+        // DOM elements
+        const singleUploadArea = document.getElementById('singleUploadArea');
+        const batchUploadArea = document.getElementById('batchUploadArea');
+        const singleFileInput = document.getElementById('singleFileInput');
+        const batchFileInput = document.getElementById('batchFileInput');
+        const progressSection = document.getElementById('progressSection');
+        const liveProgress = document.getElementById('liveProgress');
+        const progressText = document.getElementById('progressText');
+        const progressPercent = document.getElementById('progressPercent');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const batchProgress = document.getElementById('batchProgress');
+        const batchProgressBar = document.getElementById('batchProgressBar');
+        const batchProgressText = document.getElementById('batchProgressText');
+        
+        // Event listeners for drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            [singleUploadArea, batchUploadArea].forEach(area => {
+                area.addEventListener(eventName, preventDefaults, false);
+            });
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            [singleUploadArea, batchUploadArea].forEach(area => {
+                area.addEventListener(eventName, highlight, false);
+            });
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            [singleUploadArea, batchUploadArea].forEach(area => {
+                area.addEventListener(eventName, unhighlight, false);
+            });
+        });
+        
+        function highlight(e) {
+            this.style.borderColor = '#6c5ce7';
+            this.style.backgroundColor = 'rgba(108, 92, 231, 0.1)';
+        }
+        
+        function unhighlight(e) {
+            this.style.borderColor = '#6c5ce7';
+            this.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+        }
+        
+        // Handle file drops
+        singleUploadArea.addEventListener('drop', handleSingleDrop, false);
+        batchUploadArea.addEventListener('drop', handleBatchDrop, false);
+        
+        function handleSingleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                handleSingleFile(files[0]);
+            }
+        }
+        
+        function handleBatchDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                handleBatchFiles(files);
+            }
+        }
+        
+        // Handle file selection via input
+        singleFileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                handleSingleFile(this.files[0]);
+            }
+        });
+        
+        batchFileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                handleBatchFiles(this.files);
+            }
+        });
+        
+        // Handle single file upload
+        function handleSingleFile(file) {
+            if (!isValidFile(file)) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            progressSection.style.display = 'block';
+            batchProgress.style.display = 'none';
+            updateProgress(10, 'Uploading file...');
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || 'Upload failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                currentSubmissionId = data.submission_id;
+                updateProgress(30, 'Compiling code...');
+                checkSubmissionStatus();
+            })
+            .catch(error => {
+                showError('Upload failed: ' + error.message);
+                updateProgress(0, 'Upload failed');
+            });
+        }
+        
+        // Handle batch files upload
+        function handleBatchFiles(files) {
+            const validFiles = Array.from(files).filter(file => isValidFile(file));
+            
+            if (validFiles.length === 0) {
+                showError('No valid files selected');
+                return;
+            }
+            
+            if (validFiles.length > 10) {
+                showError('Maximum 10 files allowed for batch processing');
+                return;
+            }
+            
+            const formData = new FormData();
+            validFiles.forEach(file => formData.append('files', file));
+            
+            progressSection.style.display = 'block';
+            batchProgress.style.display = 'block';
+            updateProgress(10, 'Uploading files...');
+            updateBatchProgress(0, validFiles.length);
+            
+            fetch('/batch_upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || 'Upload failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+                
+                batchSubmissionIds = data.submission_ids;
+                processedBatchItems = 0;
+                updateProgress(30, 'Processing batch...');
+                
+                // Check status of each submission
+                if (batchSubmissionIds.length > 0) {
+                    batchSubmissionIds.forEach(id => checkBatchSubmissionStatus(id, batchSubmissionIds.length));
+                }
+            })
+            .catch(error => {
+                showError('Upload failed: ' + error.message);
+                updateProgress(0, 'Upload failed');
+                updateBatchProgress(0, 0);
+            });
+        }
+        
+        function isValidFile(file) {
+            const allowedExtensions = ['cpp', 'cc', 'cxx'];
+            const extension = file.name.split('.').pop().toLowerCase();
+            
+            if (!allowedExtensions.includes(extension)) {
+                showError('Invalid file type: ' + file.name + '. Only .cpp, .cc, and .cxx files are allowed.');
+                return false;
+            }
+            
+            if (file.size > 1024 * 1024) {
+                showError('File too large: ' + file.name + '. Maximum size is 1MB.');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function checkSubmissionStatus() {
+            if (!currentSubmissionId) return;
+            
+            fetch('/status/' + currentSubmissionId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'processing') {
+                    setTimeout(() => checkSubmissionStatus(), 1000);
+                    return;
+                }
+                
+                if (data.compile_status === 'pending') {
+                    updateProgress(50, 'Compiling...');
+                    setTimeout(() => checkSubmissionStatus(), 1000);
+                    return;
+                }
+                
+                if (data.compile_status === 'error') {
+                    updateProgress(100, 'Compilation failed');
+                    showCompilationError(data);
+                    return;
+                }
+                
+                if (data.overall_status === 'pending') {
+                    const testCount = data.test_results ? data.test_results.length : 0;
+                    const progress = 50 + (testCount / 6 * 40);
+                    updateProgress(progress, 'Running test cases...');
+                    setTimeout(() => checkSubmissionStatus(), 1000);
+                    return;
+                }
+                
+                updateProgress(100, 'Grading complete');
+                showResults(data);
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+                setTimeout(() => checkSubmissionStatus(), 1000);
+            });
+        }
+        
+        function checkBatchSubmissionStatus(submissionId, total) {
+            fetch('/status/' + submissionId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'processing' || data.overall_status === 'pending') {
+                    setTimeout(() => checkBatchSubmissionStatus(submissionId, total), 1000);
+                    return;
+                }
+                
+                processedBatchItems++;
+                updateBatchProgress(processedBatchItems, total);
+                
+                if (processedBatchItems === total) {
+                    updateProgress(100, 'Batch processing complete');
+                    
+                    // Fetch all results
+                    Promise.all(batchSubmissionIds.map(id => 
+                        fetch('/status/' + id).then(res => res.json())
+                    )).then(allResults => {
+                        showBatchResults(allResults);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error checking batch status:', error);
+                setTimeout(() => checkBatchSubmissionStatus(submissionId, total), 1000);
+            });
+        }
+        
+        function updateProgress(percent, text) {
+            liveProgress.style.width = percent + '%';
+            progressText.textContent = text;
+            progressPercent.textContent = Math.round(percent) + '%';
+            
+            if (percent < 30) {
+                liveProgress.classList.add('progress-bar-striped', 'progress-bar-animated');
+                liveProgress.classList.remove('bg-success');
+                liveProgress.classList.add('bg-primary');
+            } else if (percent < 70) {
+                liveProgress.classList.remove('bg-primary');
+                liveProgress.classList.add('bg-info');
+            } else if (percent < 100) {
+                liveProgress.classList.remove('bg-info');
+                liveProgress.classList.add('bg-warning');
+            } else {
+                liveProgress.classList.remove('progress-bar-striped', 'progress-bar-animated', 'bg-warning');
+                liveProgress.classList.add('bg-success');
+            }
+        }
+        
+        function updateBatchProgress(processed, total) {
+            const percent = total > 0 ? (processed / total) * 100 : 0;
+            batchProgressBar.style.width = percent + '%';
+            batchProgressText.textContent = `${processed}/${total} files processed`;
+        }
+        
+        function showError(message) {
+            resultsContainer.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error:</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+        
+        function showCompilationError(data) {
+            resultsContainer.innerHTML = `
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Compilation Error</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Failed to compile <strong>${data.filename}</strong></p>
+                        <pre class="bg-dark text-light p-3 rounded">${data.compile_error || 'Unknown compilation error'}</pre>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showResults(data) {
+            let testCasesHtml = '';
+            
+            if (data.test_results && data.test_results.length > 0) {
+                data.test_results.forEach(test => {
+                    const isPublic = test.type === 'Public';
+                    const isPass = test.status === 'PASS';
+                    
+                    testCasesHtml += `
+                        <div class="test-case ${isPass ? 'pass' : 'fail'} mb-3 p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">${test.type} Test Case ${test.case}</h6>
+                                <span class="badge ${isPass ? 'bg-success' : 'bg-danger'}">${test.status}</span>
+                            </div>
+                            ${test.expected !== undefined ? `
+                                <div class="row mt-2">
+                                    <div class="col-md-6">
+                                        <strong>Expected:</strong>
+                                        <pre class="bg-light p-2 mt-1">${test.expected || 'No output'}</pre>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Got:</strong>
+                                        <pre class="bg-light p-2 mt-1">${test.got || 'No output'}</pre>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            <div class="d-flex justify-content-between mt-2">
+                                <small class="text-muted">Type: ${test.type}</small>
+                                <span class="memory-badge">Memory: ${formatMemory(test.memory_used || 0)}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                testCasesHtml = '<p>No test cases were run.</p>';
+            }
+            
+            const overallStatus = data.overall_status;
+            let statusClass = 'warning';
+            let statusText = 'Partial Success';
+            
+            if (overallStatus === 'success') {
+                statusClass = 'success';
+                statusText = 'Success';
+            } else if (overallStatus === 'compile_error') {
+                statusClass = 'danger';
+                statusText = 'Compilation Error';
+            } else if (overallStatus === 'no_tests') {
+                statusClass = 'info';
+                statusText = 'No Tests Found';
+            }
+            
+            resultsContainer.innerHTML = `
+                <div class="card mb-4">
+                    <div class="card-header bg-${statusClass} text-white">
+                        <h5 class="mb-0">Grading Results for ${data.filename}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="stats-box">
+                                    <div class="stats-number">${data.score || 'N/A'}</div>
+                                    <div class="stats-label">Total Score</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stats-box">
+                                    <div class="stats-number">${data.public_score || 'N/A'}</div>
+                                    <div class="stats-label">Public Tests</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stats-box">
+                                    <div class="stats-number">${data.hidden_score || 'N/A'}</div>
+                                    <div class="stats-label">Hidden Tests</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="mb-3">Test Cases</h5>
+                        ${testCasesHtml}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showBatchResults(results) {
+            let batchHtml = '<h4 class="mb-4">Batch Results</h4>';
+            
+            results.forEach(data => {
+                const overallStatus = data.overall_status;
+                let statusClass = 'warning';
+                let statusText = 'Partial Success';
+                
+                if (overallStatus === 'success') {
+                    statusClass = 'success';
+                    statusText = 'Success';
+                } else if (overallStatus === 'compile_error') {
+                    statusClass = 'danger';
+                    statusText = 'Compilation Error';
+                } else if (overallStatus === 'no_tests') {
+                    statusClass = 'info';
+                    statusText = 'No Tests Found';
+                }
+                
+                batchHtml += `
+                    <div class="card submission-card mb-3" data-bs-toggle="collapse" data-bs-target="#details-${data.submission_id}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">${data.filename}</h6>
+                                <span class="badge bg-${statusClass}">${statusText} - ${data.score || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="collapse mb-4" id="details-${data.submission_id}">
+                        <div class="card">
+                            <div class="card-body">
+                                ${data.compile_status === 'error' ? `
+                                    <pre class="bg-dark text-light p-3 rounded">${data.compile_error || 'Unknown compilation error'}</pre>
+                                ` : `
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <div class="stats-box">
+                                                <div class="stats-number">${data.score || 'N/A'}</div>
+                                                <div class="stats-label">Total Score</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="stats-box">
+                                                <div class="stats-number">${data.public_score || 'N/A'}</div>
+                                                <div class="stats-label">Public Tests</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="stats-box">
+                                                <div class="stats-number">${data.hidden_score || 'N/A'}</div>
+                                                <div class="stats-label">Hidden Tests</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <h6>Test Cases:</h6>
+                                    ${data.test_results && data.test_results.length > 0 ? 
+                                        data.test_results.map(test => `
+                                            <div class="test-case ${test.status === 'PASS' ? 'pass' : 'fail'} mb-2 p-2">
+                                                <div class="d-flex justify-content-between">
+                                                    <span>${test.type} Test Case ${test.case}</span>
+                                                    <span class="badge ${test.status === 'PASS' ? 'bg-success' : 'bg-danger'}">${test.status}</span>
+                                                </div>
+                                                <small class="memory-badge">Memory: ${formatMemory(test.memory_used || 0)}</small>
+                                            </div>
+                                        `).join('') : 
+                                        '<p>No test cases were run.</p>'
+                                    }
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = batchHtml;
+        }
+        
+        function formatMemory(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+    </script>
+</body>
+</html>
